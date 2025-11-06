@@ -1,0 +1,96 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Calibri;}{\f1 Courier New;}}
+\fs22
+
+\b Module Inventory: descriptions, common cmdlets, and notes\b0\par
+\par
+(Notes: This RTF file is suitable to open in Microsoft Word. Each module name is bolded and followed by bulleted items for Description, Common cmdlets, and Notes/Usage.)\par
+\par
+
+\b ActiveDirectory\b0\par
+\tab• Description: PowerShell module for administering on-premises Active Directory Domain Services (user, group, computer, group policy, service accounts, and AD configuration management).\par
+\tab• Common cmdlets: Add-ADUser, Get-ADUser, Set-ADUser, Get-ADComputer, New-ADOrganizationalUnit, Get-ADGroupMember\par
+\tab• Notes/Usage: Requires RSAT or Domain Controller; used for AD automation, user lifecycle, and service account management.\par
+\par
+
+\b AppBackgroundTask\b0\par
+\tab• Description: Tools to manage UWP/modern app background task diagnostics and logging on Windows.\par
+\tab• Common cmdlets: Enable-AppBackgroundTaskDiagnosticLog, Disable-AppBackgroundTaskDiagnosticLog\par
+\tab• Notes/Usage: Useful for troubleshooting background tasks for Store/UWP apps; mostly for developers and advanced diagnostics.\par
+\par
+
+\b AppLocker\b0\par
+\tab• Description: Manage AppLocker policies for application whitelisting/allowlisting and executable/script enforcement on Windows.\par
+\tab• Common cmdlets: Get-AppLockerPolicy, New-AppLockerPolicy, Set-AppLockerPolicy, Test-AppLockerPolicy\par
+\tab• Notes/Usage: Use to create/enforce app allowlists by publisher/path/hash; typically part of security baselines.\par
+\par
+
+\b AppvClient\b0\par
+\tab• Description: Management commands for Microsoft Application Virtualization (App-V) client (connection groups, packages, publishing).\par
+\tab• Common cmdlets: Add-AppvClientPackage, Publish-AppvClientPackage, Remove-AppvClientPackage\par
+\tab• Notes/Usage: Relevant for legacy App-V virtualization environments; many orgs have moved to other packaging models.\par
+\par
+
+\b Appx\b0\par
+\tab• Description: Manage Windows app packages (AppX) for installing, removing, and querying Store/UWP apps on Windows.\par
+\tab• Common cmdlets: Add-AppxPackage, Get-AppxPackage, Remove-AppxPackage, Get-AppxPackageManifest\par
+\tab• Notes/Usage: Useful for provisioning images and managing per-user app packages.\par
+\par
+
+\b AssignedAccess\b0\par
+\tab• Description: Manage Assigned Access (kiosk) configurations on Windows for locking a device to a single app or set of apps.\par
+\tab• Common cmdlets: Set-AssignedAccess, Get-AssignedAccess, Clear-AssignedAccess\par
+\tab• Notes/Usage: Often used in kiosk or single-purpose device scenarios.\par
+\par
+
+\b BestPractices\b0\par
+\tab• Description: Windows BPA (Best Practices Analyzer) helper module — run baseline checks and remediation suggestions for server roles.\par
+\tab• Common cmdlets: Get-BpaModel, Invoke-BpaModel, Get-BpaResult\par
+\tab• Notes/Usage: Useful for health checks and built-in role best-practice scans.\par
+\par
+
+\b BitLocker\b0\par
+\tab• Description: Manage BitLocker drive encryption on Windows (enable, suspend, resume, unlock, recovery key management).\par
+\tab• Common cmdlets: Enable-BitLocker, Unlock-BitLocker, Suspend-BitLocker, Get-BitLockerVolume\par
+\tab• Notes/Usage: Requires admin rights; integrate with recovery key escrow (AD / MDM) for enterprise usage.\par
+\par
+
+\b BitsTransfer\b0\par
+\tab• Description: Background Intelligent Transfer Service (BITS) client cmdlets implemented as script wrapper around BITS COM APIs.\par
+\tab• Common cmdlets: Start-BitsTransfer, Get-BitsTransfer, Complete-BitsTransfer, Add-BitsFile\par
+\tab• Notes/Usage: Good for resilient, throttled downloads/uploads in automation scripts.\par
+\par
+
+\b BranchCache\b0\par
+\tab• Description: Manage Windows BranchCache features for caching content from central servers at branch locations.\par
+\tab• Common cmdlets: Enable-BC, Disable-BC, Get-BCStatus, Clear-BCCache\par
+\tab• Notes/Usage: Useful for WAN optimization in distributed enterprises; requires BranchCache role/config.\par
+\par
+
+\b CimCmdlets\b0\par
+\tab• Description: Core CIM cmdlets to manage Common Information Model (WMI/CIM) operations: query classes, instances, and associations.\par
+\tab• Common cmdlets: Get-CimInstance, New-CimSession, Invoke-CimMethod, Get-CimClass\par
+\tab• Notes/Usage: Preferred modern replacement for many WMI operations; supports remote CIM sessions (WSMan/DCOM variations).\par
+\par
+
+\b ClusterAwareUpdating\b0\par
+\tab• Description: Manage Cluster Aware Updating (CAU) plugins and registration for Windows Server failover clusters.\par
+\tab• Common cmdlets: Register-CauPlugin, Unregister-CauPlugin, Get-CauPlugin\par
+\tab• Notes/Usage: Used in clustered environments to coordinate update installations across cluster nodes.\par
+\par
+
+\b ConfigCI\b0\par
+\tab• Description: Configuration Integrity / Code Integrity policy creation and management helpers.\par
+\tab• Common cmdlets: New-CIPolicy, Get-CIPolicyRule, Test-CIPolicy\par
+\tab• Notes/Usage: Used to create and manage Device Guard/Windows code integrity rules.\par
+\par
+
+\b ConfigDefender\b0\par
+\tab• Description: Tools to view and manage Microsoft Defender (formerly Windows Defender) configuration/preferences.\par
+\tab• Common cmdlets: Get-MpPreference, Set-MpPreference, Add-MpPreference\par
+\tab• Notes/Usage: Useful for AV policy automation and troubleshooting Defender settings.\par
+\par
+
+\b ConfigDefenderPerformance\b0\par
+\tab• Description: Performance recording utilities for Defender (create and fetch performance recordings/reports).\par
+\tab• Common cmdlets: New-MpPerformanceRecording, Get-MpPerformance
