@@ -1,3 +1,2 @@
 Name,Version,Path
-ModuleA,1.0.0,/path/to/moduleA
-ModuleB,2.1.0,/path/to/moduleB
+ActiveDirectory,1.0.0.0,C:\WINDOWSPATH:/WINDOWS\WindowsPowerShell Modules\
