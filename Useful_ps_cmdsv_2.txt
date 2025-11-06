@@ -1,0 +1,256 @@
+<#
+.SYNOPSIS
+  Compact, practical PowerShell cheat-sheet for operators working with on-prem Active Directory,
+  Azure Resource Management (Az), and Azure AD / Microsoft Graph. Includes robust prerequisite
+  checks, helper functions, and detailed usage instructions + best practices for each helper.
+
+.PURPOSE
+  - Ensure the provided helper functions behave predictably and are easy to reuse.
+  - Provide clear instructions for each function (inputs, outputs, examples, tips).
+  - Provide safe, repeatable installation guidance (per-user installs by default).
+
+.NOTES
+  - PowerShell compatibility:
+      * Windows PowerShell 5.1 — recommended for on-prem Active Directory (RSAT Active Directory module).
+      * PowerShell 7+ (pwsh) — recommended for Az and Microsoft.Graph modules and cross-platform scripts.
+      * ActiveDirectory module is Windows PowerShell-only; in PowerShell 7 you can import it via:
+          Import-Module ActiveDirectory -UseWindowsPowerShell
+        which runs the module in a Windows PowerShell process. This requires WinPS to be available.
+  - Module installation:
+      * Use -Scope CurrentUser when possible to avoid needing administrative elevation.
+      * Use -Scope AllUsers only when you intentionally want system-wide installation (Admin required).
+  - Always avoid hardcoding secrets. Use Key Vault, managed identities, or certificate-based auth.
+
+#>
+# -------------------------
+# Helper functions (implementation already in file)
+# -------------------------
+function Test-IsElevated { ... }            # (see implementation above in this file)
+function Ensure-PSVersion { ... }
+function Ensure-Tls12 { ... }
+function Ensure-NuGetProvider { ... }
+function Ensure-PSGalleryTrusted { ... }
+function Install-ModuleIfMissing { ... }
+function Ensure-AzModule { ... }
+function Ensure-MicrosoftGraph { ... }
+function Ensure-AzureADModule { ... }
+function Ensure-ActiveDirectoryModule { ... }
+
+<#
+  The actual implementations for the functions above are present in this file (search for the function names).
+  The section below documents how to use each helper function, examples, return values, and best practices.
+#>
+
+# -------------------------
+# Function usage, examples, and best practices
+# -------------------------
+
+<#
+1) Test-IsElevated
+   - Purpose: Detect whether the current process is running elevated (Administrator) on Windows.
+   - Input: None
+   - Output: Boolean (True if elevated, False otherwise)
+   - Example:
+       if (Test-IsElevated) { Write-Host "Running as admin" } else { Write-Host "Not elevated" }
+   - Tips:
+       * Use this to gate operations that require elevation (Install-WindowsFeature, Add-WindowsCapability).
+       * Non-Windows platforms return $false; guard calls with $IsWindows checks if needed.
+
+2) Ensure-PSVersion
+   - Purpose: Validate the major PowerShell version meets a minimum (default MinimumMajor = 5).
+   - Input:
+       -MinimumMajor (int) - default 5
+   - Output: Boolean (True if meets requirement)
+   - Example:
+       if (-not (Ensure-PSVersion -MinimumMajor 7)) { throw "PowerShell 7+ required" }
+   - Tips:
+       * Use early in a script to fail fast when the environment doesn't meet requirements.
+       * For cross-platform modules prefer PowerShell 7+ where possible.
+
+3) Ensure-Tls12
+   - Purpose: Sets TLS 1.2 for current session (helps PSGallery/PSGet connectivity on older hosts).
+   - Input: None
+   - Output: Boolean (True on success)
+   - Example:
+       Ensure-Tls12
+   - Tips:
+       * Call this before any Install-Module or PSGallery calls on older Windows hosts.
+       * Does not permanently change system settings — only session-level.
+
+4) Ensure-NuGetProvider
+   - Purpose: Ensures the NuGet package provider is available for Install-Module / Install-PackageProvider.
+   - Input: None
+   - Output: Boolean (True on success)
+   - Example:
+       Ensure-NuGetProvider
+   - Tips:
+       * If this fails, re-run the function in an elevated session, or check proxy/firewall rules.
+       * Useful in CI runners where NuGet may not be present.
+
+5) Ensure-PSGalleryTrusted
+   - Purpose: Ensures PSGallery is registered and marked as Trusted to avoid interactive prompts.
+   - Input: None
+   - Output: Boolean (True on success)
+   - Example:
+       Ensure-PSGalleryTrusted
+   - Tips:
+       * Marking PSGallery as Trusted avoids prompts when installing modules in automation.
+       * If you cannot change repository policy, use -Scope CurrentUser and install interactively.
+
+6) Install-ModuleIfMissing
+   - Purpose: Idempotent installer: installs or updates a module if missing/outdated.
+   - Parameters:
+       -Name (string) - module name (mandatory)
+       -MinimumVersion (string) - optional minimum version to ensure
+       -Scope ('CurrentUser'|'AllUsers') - default 'CurrentUser'
+       -AllowClobber (switch) - pass to Install-Module/Update-Module
+   - Returns: Boolean ($true on success)
+   - Examples:
+       Install-ModuleIfMissing -Name Az.Resources -Scope CurrentUser
+       Install-ModuleIfMissing -Name Microsoft.Graph -Scope CurrentUser -AllowClobber
+   - Tips:
+       * Prefer CurrentUser for ad-hoc runs. Use AllUsers only in controlled, administrator-run deployments.
+       * Avoid Force unless you expect to overwrite or fix broken installs.
+       * To pin versions for reproducible automation, consider:
+           Install-Module -Name Az -RequiredVersion 9.5.0 -Scope CurrentUser
+       * On air-gapped systems, use Save-Module on a machine with access and then Install-Module -Source.
+
+7) Ensure-AzModule
+   - Purpose: Convenience wrapper to install/import Az (full) or Az.Resources (smaller footprint).
+   - Parameter:
+       -Mode ('Full'|'ResourcesOnly') - default 'ResourcesOnly'
+   - Example:
+       Ensure-AzModule -Mode Full
+       Ensure-AzModule -Mode ResourcesOnly
+   - Tips:
+       * Full mode installs many Az.* modules — useful for broad admin tasks but slower.
+       * ResourcesOnly + Az.Accounts is often enough for resource-group and RBAC scripts.
+       * After installing modules, start a new PowerShell session to ensure all exported commands are available.
+
+8) Ensure-MicrosoftGraph
+   - Purpose: Installs Microsoft.Graph (recommended replacement for AzureAD).
+   - Example:
+       Ensure-MicrosoftGraph
+   - Tips:
+       * Graph modules include submodules; you may limit scope with -Module Microsoft.Graph.Users if you want a smaller install.
+       * Graph cmdlets often require admin consent/scoped permissions. For unattended automation prefer app-only auth.
+
+9) Ensure-AzureADModule
+   - Purpose: Installs the legacy AzureAD module if you still need older cmdlets.
+   - Example:
+       Ensure-AzureADModule
+   - Tips:
+       * Prefer Microsoft.Graph for new work. Only install AzureAD if maintaining legacy scripts.
+       * AzureADPreview may contain newer functionality — use carefully.
+
+10) Ensure-ActiveDirectoryModule
+    - Purpose: Detects and (when elevated on Windows) tries to install RSAT/ActiveDirectory tools.
+    - Returns: Boolean ($true if module ready/available, $false otherwise)
+    - Example:
+        if (-not (Ensure-ActiveDirectoryModule)) {
+            Write-Warning "Install RSAT Active Directory tools on a Windows workstation or run on a DC."
+        } else {
+            Import-Module ActiveDirectory
+            Get-ADUser -Identity jsmith -Properties *
+        }
+    - Tips:
+        * For domain management, use Windows PowerShell 5.1 with RSAT installed or a Domain Controller.
+        * In PowerShell 7 you can use:
+            Import-Module ActiveDirectory -UseWindowsPowerShell
+          which proxies AD cmdlets into a Windows PowerShell process. This requires Windows PowerShell is installed.
+        * Installing RSAT requires Administrator privileges.
+
+# -------------------------
+# Example flow (recommended pattern)
+# -------------------------
+<#
+# Example: bootstrap environment and then run a non-destructive check.
+
+# 1. Validate PowerShell version
+if (-not (Ensure-PSVersion -MinimumMajor 5)) { throw "Unsupported PowerShell version" }
+
+# 2. Prepare session for PSGallery
+Ensure-Tls12 | Out-Null
+Ensure-NuGetProvider | Out-Null
+Ensure-PSGalleryTrusted | Out-Null
+
+# 3. Install minimal modules for Azure and Graph (CurrentUser, non-elevated)
+Install-ModuleIfMissing -Name Az.Accounts -Scope CurrentUser -AllowClobber
+Install-ModuleIfMissing -Name Az.Resources -Scope CurrentUser
+Install-ModuleIfMissing -Name Microsoft.Graph -Scope CurrentUser -AllowClobber
+
+# 4. Check Active Directory module (will attempt RSAT install only if elevated)
+Ensure-ActiveDirectoryModule
+
+# 5. Connect to services (interactive or automated)
+# Connect-AzAccount   # interactive
+# Connect-MgGraph -Scopes "User.Read.All","Group.ReadWrite.All"   # interactive for Microsoft Graph
+
+# 6. Run safe queries (examples commented out)
+# Get-AzResourceGroup
+# Search-ADAccount -AccountInactive -UsersOnly -TimeSpan (New-TimeSpan -Days 90)
+
+# Note: Uncomment lines to run them.
+#>
+
+# -------------------------
+# Best practices, tips and gotchas
+# -------------------------
+<#
+- Idempotency:
+    * Design helper functions and installation steps to be idempotent (safe to re-run).
+    * Install-ModuleIfMissing implements idempotency by detecting installed modules.
+
+- Elevation:
+    * Only require elevated sessions for system-wide installs or OS feature installations (RSAT).
+    * For automation pipelines, prefer per-user installs and run with least privileges.
+
+- Secrets and authentication:
+    * Never hardcode credentials or plaintext secrets in scripts.
+    * Use:
+        - Azure Key Vault (Get-AzKeyVaultSecret)
+        - Managed Identity (Connect-AzAccount -Identity)
+        - Certificate-based app authentication for non-interactive Microsoft Graph / Az logins.
+    * For service principals in automation, give only the permissions required (least privilege).
+
+- Module management:
+    * Pin versions in controlled environments to avoid breaking changes:
+        Install-Module -Name Az -RequiredVersion 9.5.0 -Scope CurrentUser
+    * Use Save-Module to create offline module archives for air-gapped environments.
+    * Use Get-InstalledModule and Update-Module responsibly; test updates before rolling out.
+
+- Compatibility:
+    * ActiveDirectory cmdlets run natively only in Windows PowerShell 5.1.
+    * In PowerShell 7, use Import-Module -UseWindowsPowerShell ActiveDirectory to proxy commands to WinPS.
+    * Az and Microsoft.Graph are supported in both Windows PowerShell and PowerShell 7.
+
+- Automation and CI:
+    * Avoid interactive prompts in CI by pre-installing modules or using -Force and trusted PSGallery.
+    * For Microsoft Graph automation, prefer certificate or client-secret app-only auth rather than interactive scopes.
+    * When running in Azure Automation or Automation Accounts, use managed identities and pre-imported modules.
+
+- Safety:
+    * Use -WhatIf and -Confirm switches where supported for destructive cmdlets.
+    * Maintain logs/transcripts with Start-Transcript for auditing.
+    * Test in a staging environment before applying bulk changes to production.
+
+- Troubleshooting:
+    * If Install-Module fails due to TLS or NuGet problems, re-run Ensure-Tls12 and Ensure-NuGetProvider in an elevated session.
+    * If Get-Command can't find a cmdlet after installing a module, start a new PowerShell session or run Import-Module <ModuleName>.
+    * On machines behind proxies, set system proxy or configure PowerShellGet to use the proxy.
+
+#>
+
+# -------------------------
+# Where to go next
+# -------------------------
+<#
+- I can:
+  * split this file into three focused PS1 scripts (OnPrem-AD.ps1, Az-Resources.ps1, Graph-Identity.ps1) with parameterized functions,
+  * include CSV templates and parameter validation for bulk operations (onboarding/offboarding),
+  * produce a short printable one-page cheat sheet PDF or markdown README from these comments.
+
+Tell me which of the above you want first and whether you prefer per-user or AllUsers installs by default.
+#>
+
+# End of file

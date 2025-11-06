@@ -1,0 +1,75 @@
+To run your `Monitor-ServiceAccount-Lockout.ps1` script as the **SYSTEM user** on the remote server `HQ3dcvip04` and have it monitor that server’s event logs, follow these steps:
+
+---
+
+## 1. **Place the Script on HQ3dcvip04**
+- Copy your script to a location on `HQ3dcvip04` (e.g., `C:\Scripts\Monitor-ServiceAccount-Lockout.ps1`).
+
+---
+
+## 2. **Edit the Script to Query the Remote Event Log (if running elsewhere)**
+If you run the script **from another machine but want to check HQ3dcvip04**'s logs, add the `-ComputerName` parameter to `Get-WinEvent`:
+
+```powershell
+$TargetComputer = "HQ3dcvip04"
+
+$events = Get-WinEvent -ComputerName $TargetComputer -FilterHashtable @{
+    LogName = 'Security'
+    Id = 4740
+    StartTime = (Get-Date).AddMinutes(-5)
+} | Where-Object { $_.Properties[0].Value -eq $ServiceAccount }
+```
+If the script is running **directly on HQ3dcvip04**, you do not need `-ComputerName`.
+
+---
+
+## 3. **Create a Scheduled Task as SYSTEM**
+To run the script as SYSTEM, use Task Scheduler on `HQ3dcvip04`:
+
+### **A. Open Task Scheduler as Administrator**
+- On HQ3dcvip04: Start > type `Task Scheduler` > right-click > Run as administrator
+
+### **B. Create a New Task**
+- **Action**: “Create Task…” (not “Create Basic Task”)
+- **General Tab**:
+  - Name: `Monitor-ServiceAccount-Lockout`
+  - **Security Options**:  
+    - **Run whether user is logged on or not**
+    - **Run with highest privileges**
+    - **User or Group**: Click “Change User or Group…” > type `SYSTEM` > Check Names > OK
+- **Triggers Tab**:
+  - New… > Begin the task: On a schedule
+  - Set to repeat every 5 minutes indefinitely
+- **Actions Tab**:
+  - New… > Action: Start a program
+  - Program/script: `powershell.exe`
+  - Add arguments: `-NoProfile -ExecutionPolicy Bypass -File "C:\Scripts\Monitor-ServiceAccount-Lockout.ps1"`
+- **Conditions/Settings**: As needed for your environment
+
+### **C. Save the Task**
+- Click OK, enter admin credentials if prompted.
+
+---
+
+## 4. **Permissions & Firewall**
+- SYSTEM will have access to local event logs.
+- If you intend to run this script **remotely** and query event logs on HQ3dcvip04, ensure:
+  - You have firewall rules to allow remote event log access.
+  - The account running the script has necessary DCOM and event log reader permissions on HQ3dcvip04.
+
+---
+
+## 5. **Test the Task**
+- Right-click the task > Run.
+- Check your log file (`C:\logfiles\MFDSCAN-Monitor.log`) for debug output.
+
+---
+
+## **Summary**
+- **Best practice:** Place and run the script *locally* on HQ3dcvip04 as SYSTEM using Task Scheduler for event log access.
+- **To monitor other servers remotely**, adjust `Get-WinEvent` with `-ComputerName` and ensure permissions.
+- **No script changes needed** if running on HQ3dcvip04 as SYSTEM and monitoring local logs.
+
+---
+
+Let me know if you need a ready-to-import XML for Task Scheduler, or specific PowerShell commands to automate task creation!

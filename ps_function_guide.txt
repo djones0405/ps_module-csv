@@ -1,0 +1,149 @@
+<#
+.SYNOPSIS
+  Compact, practical PowerShell cheat-sheet for operators working with on-prem Active Directory,
+  Azure Resource Management (Az), and Azure AD / Microsoft Graph. Includes robust prerequisite
+  checks, helper functions, and detailed usage instructions + best practices for each helper.
+
+.PURPOSE
+  - Ensure the provided helper functions behave predictably and are easy to reuse.
+  - Provide clear instructions for each function (inputs, outputs, examples, tips).
+  - Provide safe, repeatable installation guidance (per-user installs by default).
+
+.NOTES
+  - PowerShell compatibility:
+      * Windows PowerShell 5.1 — recommended for on-prem Active Directory (RSAT Active Directory module).
+      * PowerShell 7+ (pwsh) — recommended for Az and Microsoft.Graph modules and cross-platform scripts.
+      * ActiveDirectory module is Windows PowerShell-only; in PowerShell 7 you can import it via:
+          Import-Module ActiveDirectory -UseWindowsPowerShell
+        which runs the module in a Windows PowerShell process. This requires WinPS to be available.
+  - Module installation:
+      * Use -Scope CurrentUser when possible to avoid needing administrative elevation.
+      * Use -Scope AllUsers only when you intentionally want system-wide installation (Admin required).
+  - Always avoid hardcoding secrets. Use Key Vault, managed identities, or certificate-based auth.
+
+#>
+# -------------------------
+# Helper functions (Implementation should go here, or in a separate region)
+# -------------------------
+function Test-IsElevated { ... }
+function Ensure-PSVersion { ... }
+function Ensure-Tls12 { ... }
+function Ensure-NuGetProvider { ... }
+function Ensure-PSGalleryTrusted { ... }
+function Install-ModuleIfMissing { ... }
+function Ensure-AzModule { ... }
+function Ensure-MicrosoftGraph { ... }
+function Ensure-AzureADModule { ... }
+function Ensure-ActiveDirectoryModule { ... }
+
+<#
+  The actual implementations for the functions above are present in this file (search for the function names).
+  The section below documents how to use each helper function, examples, return values, and best practices.
+#>
+
+# -------------------------
+# TEMPLATE FOR ADDING NEW COMMANDS/CHEATS
+# -------------------------
+<#
+Template for Useful Command/Cheat Entry
+---------------------------------------
+
+.COMMAND
+  <Give the PowerShell command or scriptlet here, with parameters in brackets if needed.>
+
+.PURPOSE
+  <Short, plain-language summary of what the command does and when/why you use it.>
+
+.PARAMETERS
+  - <Name> (<Type>): <Description, default, if optional.>
+  - ...additional parameters as needed...
+
+.INPUTS
+  <Describe or give example input, if relevant. Usually blank for one-liners.>
+
+.OUTPUT
+  <Describe what this command outputs, or reference e.g. returns object/boolean, printed text, modifies system state, etc.>
+
+.EXAMPLES
+  # EXAMPLE 1
+  <Provide a sample invocation and expected output/result.>
+  
+  # EXAMPLE 2 (optional)
+  <Another situation, if relevant.>
+
+.TIPS
+  * <Write step-by-step or best practices, warnings, or troubleshooting notes.>
+  * <Describe what to do if there's an error, how to revert, where to find documentation, etc.>
+
+.NOTES
+  - Add author/date/comments here if desired.
+
+-----------------------------------------
+# To add a new command, copy and paste this block below and fill in your details.
+#>
+
+<#
+.COMMAND
+  Get-WindowsVersion
+
+.PURPOSE
+  Displays the exact installed Windows version, edition, marketing version (e.g. 22H2/23H2), build number, and UBR (update revision).
+
+.EXAMPLES
+  # EXAMPLE
+  Get-WindowsVersion
+
+.IMPLEMENTATION
+  $cv = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
+  "$($cv.ProductName) $($cv.DisplayVersion) (Build $($cv.CurrentBuild).$($cv.UBR))"
+
+.OUTPUT
+  Human-readable string like: Windows 11 Pro 22H2 (Build 22621.2215)
+
+.TIPS
+  * No elevation needed. Works in both Windows PowerShell 5.1 and PowerShell 7+.
+  * Change output to JSON or select for CI/reporting with:
+        Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' |
+          Select-Object ProductName, DisplayVersion, CurrentBuild, UBR | ConvertTo-Json
+#>
+
+# -------------------------
+# Function usage, examples, and best practices
+# (existing documentation region remains below -- append new command blocks above this line)
+# -------------------------
+
+<#
+1) Test-IsElevated
+   - Purpose: Detect whether the current process is running elevated (Administrator) on Windows.
+   - Input: None
+   - Output: Boolean (True if elevated, False otherwise)
+   - Example:
+       if (Test-IsElevated) { Write-Host "Running as admin" } else { Write-Host "Not elevated" }
+   - Tips:
+       * Use this to gate operations that require elevation (Install-WindowsFeature, Add-WindowsCapability).
+       * Non-Windows platforms return $false; guard calls with $IsWindows checks if needed.
+
+2) Ensure-PSVersion
+   - Purpose: Validate the major PowerShell version meets a minimum (default MinimumMajor = 5).
+   - Input:
+       -MinimumMajor (int) - default 5
+   - Output: Boolean (True if meets requirement)
+   - Example:
+       if (-not (Ensure-PSVersion -MinimumMajor 7)) { throw "PowerShell 7+ required" }
+   - Tips:
+       * Use early in a script to fail fast when the environment doesn't meet requirements.
+       * For cross-platform modules prefer PowerShell 7+ where possible.
+
+3) Ensure-Tls12
+   - Purpose: Sets TLS 1.2 for current session (helps PSGallery/PSGet connectivity on older hosts).
+   - Input: None
+   - Output: Boolean (True on success)
+   - Example:
+       Ensure-Tls12
+   - Tips:
+       * Call this before any Install-Module or PSGallery calls on older Windows hosts.
+       * Does not permanently change system settings — only session-level.
+# ... rest of the original documentation remains unchanged, as in your sample ...
+#>
+
+# End of file

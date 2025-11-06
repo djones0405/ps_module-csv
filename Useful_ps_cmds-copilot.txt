@@ -1,0 +1,108 @@
+# Useful PowerShell AD Administration Commands
+
+# Get all ADUser properties: 
+## Get-ADUser -Identity <username> -Properties *
+##### This also shows bas password attempts etc. i.e.: Get-ADUser -Identity MFDSCAN -Properties *
+
+# list directory contents by date modified: 
+## ls | Sort-Object LastWriteTime -Descending
+
+
+
+## Show hidden mailboxes & export to CSV 
+Connect-ExchangeOnline ->
+Get-Mailbox -Filter {HiddenFromAddressListsEnabled -eq $true} |
+Select-Object DisplayName,PrimarySmtpAddress,Alias |
+Export-Csv -Path "C:\Temp\HiddenMailboxes.csv" -NoTypeInformation 
+
+#### OR #########
+Get-Mailbox -Filter {HiddenFromAddressListsEnabled -eq $true} | Export-CSV c:\users\jodaniel\documents\hiddenemailaccounts.csv -notypeinformation
+
+To format output as a table in powershell append "| Format-Table" to the command
+
+## Find hidden mailbox : 
+	
+## Check lockout status
+```powershell
+Get-ADUser -Identity <username> -Properties LockedOut | Select-Object LockedOut
+```
+
+## Unlock AD account
+```powershell
+Unlock-ADAccount -Identity <username>
+```
+
+## Check if an account is enabled/disabled
+```powershell
+Get-ADUser -Identity <username> -Properties Enabled | Select-Object SamAccountName,Enabled
+```
+
+## Enable a user account
+```powershell
+Enable-ADAccount -Identity <username>
+```
+
+## Disable a user account
+```powershell
+Disable-ADAccount -Identity <username>
+```
+
+## Force password reset at next logon
+```powershell
+Set-ADUser -Identity <username> -ChangePasswordAtLogon $true
+```
+
+## Reset a user’s password
+```powershell
+Set-ADAccountPassword -Identity <username> -Reset -NewPassword (ConvertTo-SecureString "NewP@ssw0rd" -AsPlainText -Force)
+```
+
+## List all locked out accounts
+```powershell
+Search-ADAccount -LockedOut | Select-Object Name,SamAccountName
+```
+
+## Find last logon time for a user
+```powershell
+Get-ADUser -Identity <username> -Properties LastLogonDate | Select-Object SamAccountName,LastLogonDate
+```
+
+## Add a user to a group
+```powershell
+Add-ADGroupMember -Identity "GroupName" -Members <username>
+```
+
+## Remove a user from a group
+```powershell
+Remove-ADGroupMember -Identity "GroupName" -Members <username>
+```
+
+## Get group membership of a user
+```powershell
+Get-ADUser -Identity <username> -Properties MemberOf | Select-Object -ExpandProperty MemberOf
+
+##Call Graph REST to list subscribed SKUS
+### # call Graph REST to list subscribed SKUs
+$response = Invoke-MgGraphRequest -Method Get -Uri "https://graph.microsoft.com/v1.0/subscribedSkus"
+
+# show per-SKU numbers and compute available seats
+$response.value |
+  Select-Object skuPartNumber,
+    @{Name='Enabled'; Expression = { $_.prepaidUnits.enabled }},
+    @{Name='Consumed'; Expression = { $_.consumedUnits }},
+    @{Name='Available'; Expression = { ($_.prepaidUnits.enabled) - ($_.consumedUnits) }} 
+```
+
+
+# fetch SKUs and export to CSV
+# fetch SKUs and export to CSV
+$response = Invoke-MgGraphRequest -Method Get -Uri "https://graph.microsoft.com/v1.0/subscribedSkus"
+$response.value |
+  Select-Object skuPartNumber,
+    @{Name='Enabled'; Expression = { $_.prepaidUnits.enabled }},
+    @{Name='Consumed'; Expression = { $_.consumedUnits }},
+    @{Name='Available'; Expression = { ($_.prepaidUnits.enabled) - ($_.consumedUnits) }} |
+  Export-Csv -Path "C:\Temp\SubscribedSkus.csv" -NoTypeInformation -Encoding UTF8
+
+Download Docker Dekstop with powershell : 
+

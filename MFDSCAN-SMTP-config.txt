@@ -1,0 +1,11 @@
+$SmtpServer = "smtp.office365.com"
+$SmtpPort = 587
+$EmailFrom = "youraddress@ahca.myflorida.com"
+$EmailTo = "recipient@domain.com"
+$Subject = "MFDSCAN ACCOUNT LOCKED OUT!"
+$Body = "The MFDSCAN serice account has been locked out"
+$Username = "youraddress@yourdomain.com"
+$Password = ConvertTo-SecureString "YourPasswordHere" -AsPlainText -Force
+$Cred = New-Object System.Management.Automation.PSCredential($Username, $Password)
+
+Send-MailMessage -From $EmailFrom -To $EmailTo -Subject $Subject -Body $Body -SmtpServer $SmtpServer -Port $SmtpPort -Credential $Cred -UseSsl
